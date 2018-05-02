@@ -5,7 +5,7 @@
         <file>qml/Valikko.qml</file>
         <file>qtquickcontrols2.conf</file>
         <file>qml/Constants.qml</file>
-        <file>qml/circles.js</file>
-        <file>qml/Circle.qml</file>
+        <file>qml/lorupussi/circles.js</file>
+        <file>qml/lorupussi/Circle.qml</file>
     </qresource>
 </RCC>

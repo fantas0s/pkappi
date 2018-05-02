@@ -1,6 +1,6 @@
 import QtQuick 2.9
 import QtQuick.Controls 2.2
-import "qrc:/qml/circles.js" as CirclesJs
+import "qrc:/qml/lorupussi/circles.js" as CirclesJs
 import pkapp.constants 1.0
 
 Page {
