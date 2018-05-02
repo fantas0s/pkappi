@@ -8,6 +8,7 @@ Page {
     width: Constants.fullscreenWidth
     height: Constants.fullscreenHeight
     Component.onCompleted: CirclesJs.init()
+    property bool lotteryOngoing: false
 
     header: Label {
         id: headerBar
@@ -22,6 +23,13 @@ Page {
         anchors.fill: parent
     }
     Label {
+        id: countDownLabel
+        text: startLotteryTimer.remaining
+        anchors.centerIn: parent
+        font.pixelSize: Qt.application.font.pixelSize * 8
+    }
+
+    Label {
         text: "CC BY-SA 4.0 Rijksdienst voor het Cultureel Erfgoed"
         font.pixelSize: Qt.application.font.pixelSize
         anchors.bottom: parent.bottom
@@ -31,10 +39,16 @@ Page {
     MultiPointTouchArea {
         id: mptArea
         function refreshCircles() {
-            CirclesJs.deleteAll()
-            for (var idx = 0 ; idx < mptArea.touchPoints.length ; idx++) {
-                if (mptArea.touchPoints[idx].pressed)
-                    CirclesJs.create(mptArea.touchPoints[idx].x, mptArea.touchPoints[idx].y)
+            if (lorupussiPage.lotteryOngoing === false) {
+                startLotteryTimer.remaining = 5
+                startLotteryTimer.restart()
+                CirclesJs.deleteAll()
+                for (var idx = 0 ; idx < mptArea.touchPoints.length ; idx++) {
+                    if (mptArea.touchPoints[idx].pressed)
+                        CirclesJs.create(mptArea.touchPoints[idx].x, mptArea.touchPoints[idx].y)
+                }
+            } else {
+                /* Do not update during lottery */
             }
         }
         touchPoints: [
@@ -52,5 +66,37 @@ Page {
         anchors.fill: parent
         onPressed: refreshCircles()
         onReleased: refreshCircles()
+    }
+    Timer {
+        id: startLotteryTimer
+        property int remaining: 5
+        interval: 1000
+        running: true
+        onTriggered: {
+            remaining--;
+            if (remaining === 0) {
+                running = false
+                lorupussiPage.lotteryOngoing = true
+                lotteryTimer.running = true
+            } else {
+                running = true
+            }
+        }
+    }
+    Timer {
+        id: lotteryTimer
+        property int remaining: 10
+        running: false
+        interval: 500
+        onTriggered: {
+            CirclesJs.highlightRandomCircle()
+            remaining--;
+            if (remaining === 0) {
+                running = false
+                CirclesJs.deleteAllButHighlighted()
+            } else {
+                running = true
+            }
+        }
     }
 }

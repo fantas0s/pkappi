@@ -26,8 +26,8 @@ function create(posX, posY)
     if (component.status === Component.Ready)
     {
         var newObject = component.createObject(mptArea);
-        newObject.x = posX - (newObject.width / 2);
-        newObject.y = posY - (newObject.height / 2);
+        newObject.x = posX
+        newObject.y = posY
         allCircles[currentIdx] = newObject;
         currentIdx++;
     }
@@ -37,3 +37,40 @@ function create(posX, posY)
     }
 }
 
+function visibleCircles()
+{
+    var visibleCircles = 0;
+    for (var idx = 0 ; idx < allCircles.length ; idx++) {
+        if ((allCircles[idx] !== null) &&
+            (allCircles[idx].visible)) {
+            visibleCircles++
+        }
+    }
+    return visibleCircles
+}
+
+function highlightRandomCircle()
+{
+    var highlightIndex = Math.floor(Math.random() * visibleCircles())
+    for (var idx = 0 ; idx < allCircles.length ; idx++) {
+        if ((allCircles[idx] !== null) &&
+            (allCircles[idx].visible)) {
+            if (idx === highlightIndex)
+                allCircles[idx].highlighted = true
+            else
+                allCircles[idx].highlighted = false
+        }
+    }
+}
+
+function deleteAllButHighlighted()
+{
+    for (var idx = 0 ; idx < allCircles.length ; idx++) {
+        if ((allCircles[idx] !== null) &&
+            !allCircles[idx].highlighted) {
+            allCircles[idx].destroy();
+            allCircles[idx] = null;
+        }
+    }
+    currentIdx = 0;
+}
