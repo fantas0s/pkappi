@@ -8,7 +8,7 @@ Page {
 
     header: Label {
         text: qsTr("Valikko")
-        font.pixelSize: Qt.application.font.pixelSize * 2
+        font.pixelSize: Constants.fontPixelSizeLarge
         padding: 10
     }
 
@@ -19,7 +19,7 @@ Page {
             source: "qrc:/images/pussi.svg"
             Label {
                 anchors.centerIn: parent
-                font.pixelSize: Qt.application.font.pixelSize * 4
+                font.pixelSize: Constants.fontPixelSizeQuarterScreen
                 text: "Lorupussi"
             }
             MouseArea {

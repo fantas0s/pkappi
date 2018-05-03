@@ -8,12 +8,22 @@ Page {
     width: Constants.fullscreenWidth
     height: Constants.fullscreenHeight
     Component.onCompleted: CirclesJs.init()
-    property bool lotteryOngoing: false
+    property int loruIteration: 0
+    property var pussiTexts: ["Kuka",
+        "saa",
+        "kuka",
+        "saa",
+        "lorupussiin",
+        "kurkistaa",
+        "tillin",
+        "tallin",
+        "tömpsis"]
+    property var timeMultipliers: [1, 1, 1, 1, 2, 2, 1, 1, 2]
 
     header: Label {
         id: headerBar
-        text: qsTr("Kuka saa, kuka saa, lorupussiin kurkistaa?")
-        font.pixelSize: Qt.application.font.pixelSize * 2
+        text: qsTr("Lorupussi")
+        font.pixelSize: Constants.fontPixelSizeLarge
         padding: 10
     }
 
@@ -24,14 +34,24 @@ Page {
     }
     Label {
         id: countDownLabel
-        text: startLotteryTimer.remaining
+        text: waitFingersTimer.remaining
         anchors.centerIn: parent
-        font.pixelSize: Qt.application.font.pixelSize * 8
+        visible: false
+        font.pixelSize: Constants.fontPixelSizeOneWord
+    }
+    Label {
+        id: kukasaaLabel
+        text: lorupussiPage.pussiTexts[lorupussiPage.loruIteration]
+        anchors.centerIn: parent
+        visible: false
+        font.pixelSize: Constants.fontPixelSizeOneWord
+        color: "#FF8800"
+        z: 10
     }
 
     Label {
         text: "CC BY-SA 4.0 Rijksdienst voor het Cultureel Erfgoed"
-        font.pixelSize: Qt.application.font.pixelSize
+        font.pixelSize: Constants.fontPixelSizeSmall
         anchors.bottom: parent.bottom
         anchors.bottomMargin: headerBar.height
         anchors.right: parent.right
@@ -39,9 +59,9 @@ Page {
     MultiPointTouchArea {
         id: mptArea
         function refreshCircles() {
-            if (lorupussiPage.lotteryOngoing === false) {
-                startLotteryTimer.remaining = 5
-                startLotteryTimer.restart()
+            if (lorupussiPage.state === "waitingFingers") {
+                waitFingersTimer.remaining = 5
+                waitFingersTimer.restart()
                 CirclesJs.deleteAll()
                 for (var idx = 0 ; idx < mptArea.touchPoints.length ; idx++) {
                     if (mptArea.touchPoints[idx].pressed)
@@ -64,20 +84,36 @@ Page {
             TouchPoint {}
         ]
         anchors.fill: parent
-        onPressed: refreshCircles()
-        onReleased: refreshCircles()
+        onPressed: {
+            if (lorupussiPage.state === "")
+                lorupussiPage.state = "waitingFingers"
+            if (lorupussiPage.state === "waitingFingers")
+                refreshCircles()
+        }
+        onReleased: {
+            if (lorupussiPage.state === "waitingFingers") {
+                var touches = 0
+                for (var idx = 0 ; idx < mptArea.touchPoints.length ; idx++) {
+                    if (mptArea.touchPoints[idx].pressed)
+                        touches++
+                }
+                refreshCircles()
+                if (touches === 0)
+                    lorupussiPage.state = ""
+            }
+        }
     }
     Timer {
-        id: startLotteryTimer
+        id: waitFingersTimer
         property int remaining: 5
         interval: 1000
-        running: true
+        running: false
         onTriggered: {
             remaining--;
             if (remaining === 0) {
                 running = false
-                lorupussiPage.lotteryOngoing = true
-                lotteryTimer.running = true
+                lorupussiPage.state = "lottery"
+                CirclesJs.highlightRandomCircle()
             } else {
                 running = true
             }
@@ -85,18 +121,43 @@ Page {
     }
     Timer {
         id: lotteryTimer
-        property int remaining: 10
+        property int internalIteration: 0
         running: false
-        interval: 500
+        interval: 800
         onTriggered: {
-            CirclesJs.highlightRandomCircle()
-            remaining--;
-            if (remaining === 0) {
-                running = false
-                CirclesJs.deleteAllButHighlighted()
-            } else {
+            internalIteration++
+            if (internalIteration >= lorupussiPage.timeMultipliers[lorupussiPage.loruIteration]) {
+                internalIteration = 0;
+                loruIteration++;
+            }
+            if (loruIteration < lorupussiPage.timeMultipliers.length) {
+                CirclesJs.highlightRandomCircle()
                 running = true
+            } else {
+                CirclesJs.deleteAllButHighlighted()
+                lorupussiPage.state = "selected"
             }
         }
     }
+
+    states: [
+        State {
+            name: "waitingFingers"
+            PropertyChanges { target: waitFingersTimer; running: true }
+            PropertyChanges { target: lotteryTimer; running: false }
+            PropertyChanges { target: countDownLabel; visible: true }
+        },
+        State {
+            name: "lottery"
+            PropertyChanges { target: lotteryTimer; running: true }
+            PropertyChanges { target: waitFingersTimer; running: false }
+            PropertyChanges { target: countDownLabel; visible: false }
+            PropertyChanges { target: kukasaaLabel; visible: true }
+        },
+        State {
+            name: "selected"
+            PropertyChanges { target: lotteryTimer; running: false }
+            PropertyChanges { target: kukasaaLabel; visible: false }
+        }
+    ]
 }
